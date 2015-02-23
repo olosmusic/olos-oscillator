@@ -1,4 +1,27 @@
 :host {
   display: block;
-  color: red;
+  color: green;
 }
+
+#container {
+  border: 2px solid;
+  border-radius: 25px;
+  box-shadow: 10px 10px 5px #888888;
+  padding: 20px;
+  background: white;
+  opacity: 90%;
+  cursor: pointer;
+  position:fixed;
+}
+
+/*paper-slider::shadow #sliderBar::shadow #activeProgress {
+  background-color: #555;
+}
+
+paper-slider::shadow #sliderKnobInner {
+  background-color: #555;
+}
+
+paper-slider::shadow #sliderKnobInner::before {
+  background-color: #555;
+}*/

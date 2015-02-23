@@ -1,8 +1,5 @@
 (function(params){
 
-  // init draggability
-  // TO DO: add this to the base element so that everything is draggable
-
   Polymer('olos-oscillator', {
 
     oscType: 'sine',
@@ -117,7 +114,6 @@
     stopProp: function(e) {
       e.preventDefault();
       e.stopPropagation();
-      // console.log('stopprop');
     }
 
 
