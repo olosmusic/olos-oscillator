@@ -3,10 +3,11 @@
   // init draggability
   // TO DO: add this to the base element so that everything is draggable
 
-  var oscType = 'sine';
-  var freq = 440;
-
   Polymer('olos-oscillator', {
+
+    oscType: 'sine',
+    freq: 440,
+
     /**
      * color of equalizer bar in HTML color
      * @property color
@@ -78,8 +79,8 @@
       if (!self._osc) {
         var now = audioContext.currentTime;
         self._osc = self._audioContext.createOscillator();
-        self._osc.type = oscType;
-        self._osc.frequency.exponentialRampToValueAtTime(freq, now);
+        self._osc.type = this.oscType;
+        self._osc.frequency.exponentialRampToValueAtTime(this.freq, now);
         // DELETE THIS
         self._output = audioContext.destination;
 
@@ -90,20 +91,33 @@
     },
 
     setType: function(e, detail){
+      console.log(this);
       if (detail.isSelected) {
-        oscType = detail.item.innerText.toLowerCase();
+        this.oscType = detail.item.innerText.toLowerCase();
         if (this._osc){
+          console.log('bang!');
           this._osc.type = oscType;
         }
       }
     },
 
     setFreq: function(e, detail){
-      freq = this.sliderValue;
-      if (this._osc) {
+      var self = this;
+      console.log(this);
+      e.preventDefault();
+      e.stopPropagation();
+
+      this.freq = self.sliderValue;
+      if (self._osc) {
         var now = audioContext.currentTime;
-        this._osc.frequency.exponentialRampToValueAtTime(freq, now + 0.1);
+        self._osc.frequency.exponentialRampToValueAtTime(this.freq, now + 0.1);
       }
+    },
+
+    stopProp: function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      // console.log('stopprop');
     }
 
 
