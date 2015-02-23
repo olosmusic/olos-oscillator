@@ -20,8 +20,10 @@ Web Audio Oscillator
 <polymer-element name="olos-oscillator" attributes="input output width height color src showControls play rootfolder">
   <template>
 
-    <div class="draggable" draggable="true" ondragstart="dragStart(this)" ondragend="dragEnd(this)" ondrag="dragThis(this)" style="position: absolute;top:0px;left:0px">
+  <div id="container" draggable="true" style="position: relative;">
 
+<!--     <div class="draggable" draggable="true" ondragstart="dragStart(this)" ondragend="dragEnd(this)" ondrag="dragThis(this)" style="position: absolute;top:0px;left:0px">
+ -->
       <style>
         paper-slider::shadow #sliderBar::shadow #activeProgress {
           background-color: #555;
@@ -51,6 +53,7 @@ Web Audio Oscillator
             </paper-dropdown>
         </paper-dropdown-menu>
 
+      <!-- </div> -->
     </div>
   </template>
   <script src="olos-oscillator.js"type="text/javascript"></script>
