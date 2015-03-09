@@ -5,34 +5,43 @@
     oscType: 'sine',
     freq: 440,
 
+    // TO DO - make these work
     /**
-     * color of equalizer bar in HTML color
+     * color
      * @property color
      * @type {String} 
      * @default #00CCFF
      */
     color: '#00CCFF',
     /**
-     * Width of equalizer
+     * Width of module
      * @property width
      * @type {Number}
      * @default 300
      */
-    width: 300,
+    width: 100,
     /**
-     * Height of equalizer
+     * Height
      * @property height
      * @type {Number}
      * @default 200
      */
     height: 100,
     playing: false,
+
+    // inputs and outputs
+    inputFreq: null,
+    output: null,
+
     rootfolder: '../olos-oscillator/',
 
     ready: function() {
       var self = this;
       self._audioContext = audioContext;
       self.playing = false;
+
+      self.inputFreq = audioContext.createGain();
+      self.output = audioContext.createGain();
     },
 
     /**
@@ -68,7 +77,7 @@
     setOutput: function(obj) {
       var self = this;
       self._osc.connect(obj);
-      self._output = obj;
+      self.output = obj;
     },
 
     _initOsc: function() {
@@ -78,31 +87,28 @@
         self._osc = self._audioContext.createOscillator();
         self._osc.type = this.oscType;
         self._osc.frequency.exponentialRampToValueAtTime(this.freq, now);
-        // DELETE THIS
-        self._output = audioContext.destination;
 
-        if (self._output) {
-          self._osc.connect(self._output);
+        if (self.output) {
+          self._osc.connect(self.output);
         }
       }
     },
 
     setType: function(e, detail){
-      console.log(this);
       if (detail.isSelected) {
         this.oscType = detail.item.innerText.toLowerCase();
         if (this._osc){
-          console.log('bang!');
-          this._osc.type = oscType;
+          this._osc.type = this.oscType;
         }
       }
     },
 
     setFreq: function(e, detail){
       var self = this;
-      console.log(this);
-      e.preventDefault();
-      e.stopPropagation();
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
 
       this.freq = self.sliderValue;
       if (self._osc) {
@@ -114,6 +120,28 @@
     stopProp: function(e) {
       e.preventDefault();
       e.stopPropagation();
+    },
+
+    publicAudio: function() {
+      
+    },
+
+    publicAudioChanged: function() {
+      this.publicAudio();
+    },
+
+    inputFreqChanged: function() {
+      for (var i = 0; i < this.inputFreq.length; i++) {
+        if (this.inputFreq[i] > 0) {
+          this.sliderValue = nx.mtof( this.inputFreq[i] );
+          this.setFreq();
+        }
+      }
+    },
+
+    update: function() {
+      // console.log('hi');
+      this.inputFreqChanged();
     }
 
 

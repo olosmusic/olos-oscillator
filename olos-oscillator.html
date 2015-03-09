@@ -5,19 +5,19 @@
 <link rel="import" href="../paper-dropdown/paper-dropdown.html">
 <link rel="import" href="../paper-item/paper-item.html">
 <link rel="import" href="../core-menu/core-menu.html">
-
+<!-- <link rel="import" href="../font-roboto/roboto.html"> -->
 
 <!--
 Web Audio Oscillator
 ##### Example
 
 
-@element webaudio-oscillator
+@element olos-oscillator
 @blurb 
 @status alpha
 @homepage 
 -->
-<polymer-element name="olos-oscillator" attributes="input output width height color src showControls play rootfolder">
+<polymer-element name="olos-oscillator" attributes="input inputFreq output width height color src showControls play rootfolder">
   <template>
     <link rel="stylesheet" href="olos-oscillator.css"></link>
 
@@ -25,7 +25,7 @@ Web Audio Oscillator
 
       <paper-icon-button on-click="{{_toggleStart}}" id="start" src="icons/play.png"></paper-icon-button>
       Frequency
-      <paper-slider pin="true" id="freq" min="20" max="8000" immediateValue="{{sliderValue}}" on-click="{{stopProp}}" on-immediate-value-change="{{setFreq}}" style="width: {{ width - width/5}}px"></paper-slider>
+      <paper-slider pin="true" id="freq" min="20" max="1200" immediateValue="{{sliderValue}}" on-click="{{stopProp}}" on-immediate-value-change="{{setFreq}}" style="width: {{ width - width/5}}px"></paper-slider>
       <paper-dropdown-menu label="Oscillator Type">
           <paper-dropdown class="dropdown">
               <core-menu selected="0" on-core-select="{{setType}}" class="menu">
@@ -36,7 +36,6 @@ Web Audio Oscillator
               </core-menu>
           </paper-dropdown>
       </paper-dropdown-menu>
-
     </div>
   </template>
   <script src="olos-oscillator.js"type="text/javascript"></script>

@@ -10,7 +10,8 @@
     "paper-dropdown-menu": "Polymer/paper-dropdown-menu",
     "paper-dropdown": "Polymer/paper-dropdown",
     "paper-item": "Polymer/paper-item",
-    "core-menu": "Polymer/core-menu"
+    "core-menu": "Polymer/core-menu",
+    "font-roboto": "Polymer/font-roboto#^0.5.0"
   },
   "devDependencies": {
     "web-component-tester": "Polymer/web-component-tester#^1.1.4"
