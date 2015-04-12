@@ -8,24 +8,24 @@
 <!-- <link rel="import" href="../font-roboto/roboto.html"> -->
 
 <!--
-Web Audio Oscillator
+olos-oscillator is an oscillator
 ##### Example
 
 
 @element olos-oscillator
 @blurb 
 @status alpha
-@homepage 
+@homepage http://olosmusic.github.io/olos-oscillator
 -->
-<polymer-element name="olos-oscillator" attributes="input inputFreq output width height color src showControls play rootfolder">
+<polymer-element name="olos-oscillator" attributes="frequencyParam output width height color src play rootfolder">
   <template>
     <link rel="stylesheet" href="olos-oscillator.css"></link>
 
     <div id="container" width="300px">
 
-      <paper-icon-button on-click="{{_toggleStart}}" id="start" src="icons/play.png"></paper-icon-button>
+      <paper-icon-button on-click="{{_toggleStart}}" id="start" src="icons/play.png" hidden></paper-icon-button>
       Frequency
-      <paper-slider pin="true" id="freq" min="20" max="1200" immediateValue="{{sliderValue}}" on-click="{{stopProp}}" on-immediate-value-change="{{setFreq}}" style="width: {{ width - width/5}}px"></paper-slider>
+      <paper-slider pin="true" id="freqSlider" min="20" max="1200" immediateValue="{{sliderValue}}" on-click="{{stopProp}}" on-immediate-value-change="{{setFreq}}" style="width: {{ width - width/5}}px"></paper-slider>
       <paper-dropdown-menu label="Oscillator Type">
           <paper-dropdown class="dropdown">
               <core-menu selected="0" on-core-select="{{setType}}" class="menu">
@@ -38,6 +38,213 @@ Web Audio Oscillator
       </paper-dropdown-menu>
     </div>
   </template>
-  <script src="olos-oscillator.js"type="text/javascript"></script>
 
+  <script>
+    (function(params){
+
+      Polymer('olos-oscillator', {
+
+        oscType: 'sine',
+        freq: 440,
+
+        // TO DO - make these work
+        /**
+         * color
+         * @property color
+         * @type {String} 
+         * @default #00CCFF
+         */
+        color: '#00CCFF',
+        /**
+         * Width of module
+         * @property width
+         * @type {Number}
+         * @default 300
+         */
+        width: 100,
+        /**
+         * Height
+         * @property height
+         * @type {Number}
+         * @default 200
+         */
+        height: 100,
+        playing: false,
+
+        // inputs and outputs
+        output: null,
+        frequencyParam: [],
+
+        publicMethods: ['setupFreqSlider'],
+
+        rootfolder: '../olos-oscillator/',
+
+        ready: function() {
+          var self = this;
+          self._audioContext = audioContext;
+          self.playing = false;
+
+          // self.frequencyParam = audioContext.createGain();
+          self.output = audioContext.createGain();
+          self.slider = this.$.freqSlider;
+          self.setupFreqSlider();
+          self.start();
+        },
+
+        /**
+         * Start oscillator
+         */
+        start: function(time) {
+          var self = this;
+          var t = time || self._audioContext.currentTime;
+          this.$.start.src = self.rootfolder + "icons/stop.png";
+          self._initOsc();
+          self.oscillatorNode.start(t);
+        },
+
+        stop: function(time) {
+          var self = this;
+          var t = time || self._audioContext.currentTime;
+          self.oscillatorNode.stop(t);
+          this.$.start.src = self.rootfolder + "icons/play.png";
+          self.oscillatorNode.disconnect();
+          self.oscillatorNode = null;
+        },
+
+        _toggleStart: function() {
+          if(!this.playing) {
+            this.start();
+          }
+          else {
+            this.stop();
+          }
+          this.playing = !this.playing;
+        },
+
+        setOutput: function(obj) {
+          var self = this;
+          self.oscillatorNode.connect(obj);
+          self.output = obj;
+        },
+
+        _initOsc: function() {
+          var self = this;
+          if (!self.oscillatorNode) {
+            var now = audioContext.currentTime;
+            self.oscillatorNode = self._audioContext.createOscillator();
+            self.oscillatorNode.type = this.oscType;
+            self.oscillatorNode.frequency.setValueAtTime(self.sliderValue, now);
+
+            if (this.modulator) {
+              this.modulator.connect(this.oscillatorNode.frequency);
+            }
+            // if any connections are meant to go to this freqParam, connect them
+            // for (var i = 0; i < window.olos._connections.length; i++) {
+            //   var cnx = window.olos._connections[i];
+            //   if (cnx.target.id === this.id && cnx.target.field === 'frequencyParam') {
+            //     // cnx.source
+            //     console.log('make connection');
+            //     var src = cnx.source.element[cnx.source.field];
+            //     // var src = cnx.source.element['oscillatorNode'];
+            //     var dst = self.oscillatorNode.frequency;
+            //     // var dst = self.output.gain;
+            //     src.connect(dst);
+            //     // cnx.source.element[cnx.source.field].connect(self.oscillatorNode.frequency);
+            //     // window.olos.makeConnection(cnx.source.element, cnx.source.field, cnx.target.element, self.oscillatorNode);
+            //   }
+            // }
+            // if (self.frequencyParam) {
+            //   console.log(self.frequencyParam);
+            //   self.frequencyParam.connect(self.oscillatorNode.frequency);
+            // }
+            // self.oscillatorNode.frequency.exponentialRampToValueAtTime(this.freq, now);
+
+            if (self.output) {
+              self.oscillatorNode.connect(self.output);
+            }
+          }
+        },
+
+        setType: function(e, detail){
+          if (detail.isSelected) {
+            this.oscType = detail.item.innerText.toLowerCase();
+            if (this.oscillatorNode){
+              this.oscillatorNode.type = this.oscType;
+            }
+          }
+        },
+
+        setFreq: function(e, detail){
+          var self = this;
+          if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+          console.log('setFreq');
+          this.freq = self.sliderValue;
+          this.freqChanged();
+          if (self.oscillatorNode) {
+            var now = audioContext.currentTime;
+            self.oscillatorNode.frequency.exponentialRampToValueAtTime(this.freq, now + 0.000001);
+          }
+        },
+
+        stopProp: function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+        },
+
+        // publicly editable
+        setupFreqSlider: function() {
+          this.slider.min = 20;
+          this.slider.max = 800;
+          this.slider.step = 1;
+        },
+
+        frequencyParamChanged: function() {
+          if (this.frequencyParam[this.frequencyParam.length-1] instanceof AudioNode) {
+            this.modulator = this.frequencyParam[this.frequencyParam.length-1];
+            if (this.oscillatorNode) {
+              this.modulator.connect(this.oscillatorNode.frequency)
+            }
+          }
+          for (var i = 0; i < this.frequencyParam.length; i++) {
+            if (this.frequencyParam[i] > 0) {
+              this.sliderValue = nx.mtof( this.frequencyParam[i] );
+              this.setFreq();
+            }
+          }
+        },
+
+        update: function() {
+          this.frequencyParamChanged();
+        },
+
+        freqChanged: function() {
+          if (this.freq <= 0) {
+            this.freq = 0.000000001;
+            console.log('Error: Oscillator frequency must be greater than 0. Setting to 0.000001')
+          }
+        },
+
+        // TO DO: animate!
+        animate: function() {
+          this.sliderValue = this.oscillatorNode.frequency.value;
+        },
+
+        dispose: function() {
+          var nodes = ['output', 'oscillatorNode'];
+          for (var i = 0; i < nodes.length; i++) {
+            try {
+              var node = self[nodes[i]];
+              node.disconnect();
+              node = null;
+            } catch(e) { }
+          }
+        }
+
+      });
+
+    })();
+  </script>
 </polymer-element>
