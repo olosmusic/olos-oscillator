@@ -1,7 +1,7 @@
 {
   "name": "olos-oscillator",
   "version": "0.0.0",
-  "license": "MIT",  
+  "license": "MIT",
   "main": "olos-oscillator.html",
   "dependencies": {
     "polymer": "Polymer/polymer#~0.5.1",
@@ -11,7 +11,8 @@
     "paper-dropdown": "Polymer/paper-dropdown",
     "paper-item": "Polymer/paper-item",
     "core-menu": "Polymer/core-menu",
-    "font-roboto": "Polymer/font-roboto#^0.5.0"
+    "font-roboto": "Polymer/font-roboto#^0.5.0",
+    "core-tooltip": "Polymer/core-tooltip#~0.5.5"
   },
   "devDependencies": {
     "web-component-tester": "Polymer/web-component-tester#^1.1.4"

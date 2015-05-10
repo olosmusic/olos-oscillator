@@ -5,6 +5,8 @@
 <link rel="import" href="../paper-dropdown/paper-dropdown.html">
 <link rel="import" href="../paper-item/paper-item.html">
 <link rel="import" href="../core-menu/core-menu.html">
+<link rel="import" href="../core-tooltip/core-tooltip.html">
+
 <!-- <link rel="import" href="../font-roboto/roboto.html"> -->
 
 <!--
@@ -17,26 +19,39 @@ olos-oscillator is an oscillator
 @status alpha
 @homepage http://olosmusic.github.io/olos-oscillator
 -->
-<polymer-element name="olos-oscillator" attributes="frequencyParam output width height color src play rootfolder">
+<polymer-element name="olos-oscillator" attributes="frequencyParam detuneParam output width height color src play rootfolder">
   <template>
     <link rel="stylesheet" href="olos-oscillator.css"></link>
 
-    <div id="container" width="300px">
+    <div class="olos-container">
 
-      <paper-icon-button on-click="{{_toggleStart}}" id="start" src="icons/play.png" hidden></paper-icon-button>
-      Frequency
-      <paper-slider pin="true" id="freqSlider" min="20" max="1200" immediateValue="{{sliderValue}}" on-click="{{stopProp}}" on-immediate-value-change="{{setFreq}}" style="width: {{ width - width/5}}px"></paper-slider>
-      <paper-dropdown-menu label="Oscillator Type">
-          <paper-dropdown class="dropdown">
-              <core-menu selected="0" on-core-select="{{setType}}" class="menu">
-                  <paper-item label="sine">Sine</paper-item>
-                  <paper-item label="triangle">Triangle</paper-item>
-                  <paper-item label="square">Square</paper-item>
-                  <paper-item label="sawtooth">Sawtooth</paper-item>
-              </core-menu>
-          </paper-dropdown>
-      </paper-dropdown-menu>
-    </div>
+      <div>
+        <paper-dropdown-menu id="oscType">
+            <label> <core-icon src="./icons/sine_.svg" id="oscimage" style="width:25px; height:25px;"></core-icon> </label>
+            <paper-dropdown class="dropdown" style="overflow:visible;">
+                <core-menu selected="0" on-core-select="{{_setType}}" class="menu">
+                    <paper-item label="sine"> <core-icon src="./icons/sine_.svg"></core-icon>Sine</paper-item>
+                    <paper-item label="triangle"> <core-icon src="./icons/triangle_.svg"></core-icon>Triangle</paper-item>
+                    <paper-item label="square"> <core-icon src="./icons/square_.svg"></core-icon> Square</paper-item>
+                    <paper-item label="sawtooth"> <core-icon src="./icons/sawtooth_.svg"></core-icon> Sawtooth</paper-item>
+                </core-menu>
+            </paper-dropdown>
+        </paper-dropdown-menu>
+      </div>
+
+        <paper-icon-button on-click="{{_toggleStart}}" id="start" src="icons/play.png" hidden></paper-icon-button>
+
+        <div center horizontal layout>
+          <core-tooltip label="Frequency in Hertz (cycles per second)">Freq</core-tooltip>
+          <paper-slider pin="true" id="freqSlider" min="1" max="700" default="220" immediateValue="{{freqSliderValue}}" on-click="{{stopProp}}" on-immediate-value-change="{{setFreq}}" editable style="width:100%"></paper-slider>
+        </div>
+
+        <div center horizontal layout>
+          <core-tooltip label="Detune in Cents (100 cents = 1 note)">Detune</core-tooltip>
+          <paper-slider pin="true" id="detuneSlider" min="-1200" max="1200" default="0" step="100" immediateValue="{{detuneSliderValue}}" on-click="{{stopProp}}" on-immediate-value-change="{{setDetune}}" editable style="width:100%"></paper-slider>
+        </div>
+
+      </div> <!-- end olos-container-->
   </template>
 
   <script>
@@ -45,28 +60,20 @@ olos-oscillator is an oscillator
       Polymer('olos-oscillator', {
 
         oscType: 'sine',
-        freq: 440,
 
         // TO DO - make these work
-        /**
-         * color
-         * @property color
-         * @type {String} 
-         * @default #00CCFF
-         */
-        color: '#00CCFF',
         /**
          * Width of module
          * @property width
          * @type {Number}
-         * @default 300
+         * @default 100
          */
         width: 100,
         /**
          * Height
          * @property height
          * @type {Number}
-         * @default 200
+         * @default 100
          */
         height: 100,
         playing: false,
@@ -74,19 +81,22 @@ olos-oscillator is an oscillator
         // inputs and outputs
         output: null,
         frequencyParam: [],
+        detuneParam: [],
 
-        publicMethods: ['setupFreqSlider'],
+
+        publicMethods: ['setupFreqSlider', 'setupOscillator'],
 
         rootfolder: '../olos-oscillator/',
 
-        ready: function() {
+        domReady: function() {
           var self = this;
           self._audioContext = audioContext;
           self.playing = false;
 
           // self.frequencyParam = audioContext.createGain();
           self.output = audioContext.createGain();
-          self.slider = this.$.freqSlider;
+          self.freqSlider = this.$.freqSlider;
+          self.freqSlider.value = 220;
           self.setupFreqSlider();
           self.start();
         },
@@ -133,7 +143,7 @@ olos-oscillator is an oscillator
             var now = audioContext.currentTime;
             self.oscillatorNode = self._audioContext.createOscillator();
             self.oscillatorNode.type = this.oscType;
-            self.oscillatorNode.frequency.setValueAtTime(self.sliderValue, now);
+            self.oscillatorNode.frequency.setValueAtTime(self.freqSliderValue, now);
 
             if (this.modulator) {
               this.modulator.connect(this.oscillatorNode.frequency);
@@ -165,13 +175,22 @@ olos-oscillator is an oscillator
           }
         },
 
-        setType: function(e, detail){
+        _setType: function(e, detail){
           if (detail.isSelected) {
             this.oscType = detail.item.innerText.toLowerCase();
+            this.$.oscimage.src = this.rootfolder + 'icons/'+this.oscType+'_.svg';
             if (this.oscillatorNode){
               this.oscillatorNode.type = this.oscType;
             }
           }
+        },
+
+        setType: function(type) {
+          this.oscType = type;
+          this.oscillatorNode.type = this.oscType;
+
+          // TO DO: also update the visual representation
+          this.$.oscimage.src = this.rootfolder + '/icons/' + this.oscillatorNode.type + '_.svg';
         },
 
         setFreq: function(e, detail){
@@ -180,12 +199,37 @@ olos-oscillator is an oscillator
             e.preventDefault();
             e.stopPropagation();
           }
-          console.log('setFreq');
-          this.freq = self.sliderValue;
-          this.freqChanged();
+
+          if (self.freqSliderValue <=0 ) {
+            return;
+          }
+          self.freq = self.freqSliderValue;
+
+          self.freqChanged();
           if (self.oscillatorNode) {
             var now = audioContext.currentTime;
-            self.oscillatorNode.frequency.exponentialRampToValueAtTime(this.freq, now + 0.000001);
+            if (typeof(self.freq) !== 'undefined' && self.freq > 0) {
+
+              try {
+                self.oscillatorNode.frequency.exponentialRampToValueAtTime(self.freq, now + 0.000001);
+              } catch(e) {throw e}
+            }
+          }
+        },
+
+        setDetune: function(e, detail){
+          var self = this;
+          if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+
+          self.detune = self.detuneSliderValue;
+
+          // this.detuneChanged();
+          if (self.oscillatorNode) {
+            var now = audioContext.currentTime;
+            self.oscillatorNode.detune.linearRampToValueAtTime(self.detune, now + 0.000001);
           }
         },
 
@@ -196,9 +240,15 @@ olos-oscillator is an oscillator
 
         // publicly editable
         setupFreqSlider: function() {
-          this.slider.min = 20;
-          this.slider.max = 800;
-          this.slider.step = 1;
+          this.freqSlider.min = 0.01;
+          this.freqSlider.max = 500;
+          this.freqSlider.step = .1;
+          // this.freqSlider.value = 220;
+        },
+
+        setupOscillator: function() {
+          this.oscillatorNode.type = 'sine';
+          this.oscillatorNode.frequency.value = 220;
         },
 
         frequencyParamChanged: function() {
@@ -210,8 +260,18 @@ olos-oscillator is an oscillator
           }
           for (var i = 0; i < this.frequencyParam.length; i++) {
             if (this.frequencyParam[i] > 0) {
-              this.sliderValue = nx.mtof( this.frequencyParam[i] );
+              this.freqSliderValue = olos.scaleStep(i); // + this.detune.value/12);
               this.setFreq();
+            }
+          }
+        },
+
+        detuneParamChanged: function() {
+          console.log('detune param changed');
+          if (this.detuneParam[this.detuneParam.length-1] instanceof AudioNode) {
+            this.detuneModulator = this.detuneParam[this.detuneParam.length-1];
+            if (this.oscillatorNode) {
+              this.detuneModulator.connect(this.oscillatorNode.detune)
             }
           }
         },
@@ -222,14 +282,18 @@ olos-oscillator is an oscillator
 
         freqChanged: function() {
           if (this.freq <= 0) {
-            this.freq = 0.000000001;
+            this.freqSlider.value = 0.000000001;
             console.log('Error: Oscillator frequency must be greater than 0. Setting to 0.000001')
           }
+
+          // this.freqSlider.value = this.freq;
+
         },
 
         // TO DO: animate!
         animate: function() {
-          this.sliderValue = this.oscillatorNode.frequency.value;
+          this.freqSliderValue = this.oscillatorNode.frequency.value;
+          this.detuneSliderValue = this.oscillatorNode.detune.value;
         },
 
         dispose: function() {

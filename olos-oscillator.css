@@ -2,19 +2,16 @@
   display: block;
   color: green;
   font-family: 'RobotoDraft', sans-serif;
+  font-size:10px;
 }
 
-#container {
-/*  border: 2px solid;
-  border-radius: 25px;
-  padding: 20px;
-  background: white;
-  opacity: 90%;
-  cursor: pointer;
-  position:fixed;*/
+.olos-container {  
+  overflow-y: scroll;
+  position: relative;
+  height: 100%;
 }
 
-.thing {
-  box-shadow: 1px 1px 1px #888888;
-  box-shadow: 10px 10px 5px #888888;
+::shadow #input {
+  /*font-family: sans-serif;*/
+  font-weight: 700;
 }
