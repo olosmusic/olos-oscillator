@@ -89,8 +89,9 @@ enough (above 40Hz) or a rhythm if it is low enough (<20Hz).
 
         // inputs and outputs
         output: null,
-        frequencyParam: [],
-        detuneParam: [],
+
+        frequencyParam: null,
+        detuneParam: null,
 
         publicMethods: ['setupFreqSlider', 'setupOscillator'],
 
@@ -107,6 +108,7 @@ enough (above 40Hz) or a rhythm if it is low enough (<20Hz).
           self.freqSlider.value = 220;
           self.setupFreqSlider();
           self.start();
+
         },
 
         /**
@@ -156,30 +158,20 @@ enough (above 40Hz) or a rhythm if it is low enough (<20Hz).
             if (this.modulator) {
               this.modulator.connect(this.oscillatorNode.frequency);
             }
-            // if any connections are meant to go to this freqParam, connect them
-            // for (var i = 0; i < window.olos._connections.length; i++) {
-            //   var cnx = window.olos._connections[i];
-            //   if (cnx.target.id === this.id && cnx.target.field === 'frequencyParam') {
-            //     // cnx.source
-            //     console.log('make connection');
-            //     var src = cnx.source.element[cnx.source.field];
-            //     // var src = cnx.source.element['oscillatorNode'];
-            //     var dst = self.oscillatorNode.frequency;
-            //     // var dst = self.output.gain;
-            //     src.connect(dst);
-            //     // cnx.source.element[cnx.source.field].connect(self.oscillatorNode.frequency);
-            //     // window.olos.makeConnection(cnx.source.element, cnx.source.field, cnx.target.element, self.oscillatorNode);
-            //   }
-            // }
-            // if (self.frequencyParam) {
-            //   console.log(self.frequencyParam);
-            //   self.frequencyParam.connect(self.oscillatorNode.frequency);
-            // }
-            // self.oscillatorNode.frequency.exponentialRampToValueAtTime(this.freq, now);
 
             if (self.output) {
               self.oscillatorNode.connect(self.output);
             }
+
+            // set audioParams for olos-params              // TO DO: generate these automatically ?
+            self.frequencyParam = self.$.frequencyParam;
+            self.detuneParam = self.$.detuneParam;
+            self.frequencyParam.scope = self;
+            self.frequencyParam.callback = self.freqUpdate;
+            self.detuneParam.scope = self;
+            self.detuneParam.callback = self.detuneUpdate;
+            self.detuneParam.audioParam = self.oscillatorNode.detune;
+            self.frequencyParam.audioParam = self.oscillatorNode.frequency;
           }
         },
 
@@ -259,16 +251,6 @@ enough (above 40Hz) or a rhythm if it is low enough (<20Hz).
           this.oscillatorNode.frequency.value = 220;
         },
 
-        frequencyParamChanged: function() {
-          if (this.frequencyParam[this.frequencyParam.length-1] instanceof AudioNode) {
-            this.modulator = this.frequencyParam[this.frequencyParam.length-1];
-            if (this.oscillatorNode) {
-              this.modulator.connect(this.oscillatorNode.frequency)
-            }
-          }
-          this.onInput(this.frequencyParam);
-        },
-
         // public method
         onInput: function(data) {
           for (var i = 0; i < data.length; i++) {
@@ -279,18 +261,31 @@ enough (above 40Hz) or a rhythm if it is low enough (<20Hz).
           }
         },
 
-        detuneParamChanged: function() {
-          console.log('detune param changed');
-          if (this.detuneParam[this.detuneParam.length-1] instanceof AudioNode) {
-            this.detuneModulator = this.detuneParam[this.detuneParam.length-1];
-            if (this.oscillatorNode) {
-              this.detuneModulator.connect(this.oscillatorNode.detune)
-            }
-          }
+
+        // called by olos-param
+        freqUpdate: function(time, value) {
+          console.log(value);
+
+          // if (this.frequencyParam[this.frequencyParam.length-1] instanceof AudioNode) {
+          //   this.modulator = this.frequencyParam[this.frequencyParam.length-1];
+          //   if (this.oscillatorNode) {
+          //     this.modulator.connect(this.oscillatorNode.frequency)
+          //   }
+          // }
+
+          // this.onInput(this.frequencyParam);
         },
 
-        update: function() {
-          this.frequencyParamChanged();
+        // called by olos-param
+        detuneUpdate: function(time, value) {
+          console.log(time);
+          // console.log('detune param changed');
+          // if (this.detuneParam[this.detuneParam.length-1] instanceof AudioNode) {
+          //   this.detuneModulator = this.detuneParam[this.detuneParam.length-1];
+          //   if (this.oscillatorNode) {
+          //     this.detuneModulator.connect(this.oscillatorNode.detune)
+          //   }
+          // }
         },
 
         freqChanged: function() {
