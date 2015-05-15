@@ -7,10 +7,16 @@
 <link rel="import" href="../core-menu/core-menu.html">
 <link rel="import" href="../core-tooltip/core-tooltip.html">
 
+<link rel="import" href="../olos-param/olos-param.html">
+
 <!-- <link rel="import" href="../font-roboto/roboto.html"> -->
 
 <!--
-olos-oscillator is an oscillator
+olos-oscillator is a signal oscillating between -1 and +1, with 0 as no amplitude.
+
+It oscillates at a frequency (cycles per second) that we perceive as sound if it is fast
+enough (above 40Hz) or a rhythm if it is low enough (<20Hz).
+
 ##### Example
 
 
@@ -41,11 +47,14 @@ olos-oscillator is an oscillator
 
         <paper-icon-button on-click="{{_toggleStart}}" id="start" src="icons/play.png" hidden></paper-icon-button>
 
+
+        <olos-param id="frequencyParam"></olos-param>
         <div center horizontal layout>
           <core-tooltip label="Frequency in Hertz (cycles per second)">Freq</core-tooltip>
-          <paper-slider pin="true" id="freqSlider" min="1" max="700" default="220" immediateValue="{{freqSliderValue}}" on-click="{{stopProp}}" on-immediate-value-change="{{setFreq}}" editable style="width:100%"></paper-slider>
+          <paper-slider pin="true" id="freqSlider" min="1" max="700" default="220" immediateValue="{{freq}}" on-click="{{stopProp}}" on-immediate-value-change="{{setFreq}}" editable style="width:100%"></paper-slider>
         </div>
 
+        <olos-param id="detuneParam"></olos-param>
         <div center horizontal layout>
           <core-tooltip label="Detune in Cents (100 cents = 1 note)">Detune</core-tooltip>
           <paper-slider pin="true" id="detuneSlider" min="-1200" max="1200" default="0" step="100" immediateValue="{{detuneSliderValue}}" on-click="{{stopProp}}" on-immediate-value-change="{{setDetune}}" editable style="width:100%"></paper-slider>
@@ -82,7 +91,6 @@ olos-oscillator is an oscillator
         output: null,
         frequencyParam: [],
         detuneParam: [],
-
 
         publicMethods: ['setupFreqSlider', 'setupOscillator'],
 
@@ -143,7 +151,7 @@ olos-oscillator is an oscillator
             var now = audioContext.currentTime;
             self.oscillatorNode = self._audioContext.createOscillator();
             self.oscillatorNode.type = this.oscType;
-            self.oscillatorNode.frequency.setValueAtTime(self.freqSliderValue, now);
+            self.oscillatorNode.frequency.setValueAtTime(self.freq, now);
 
             if (this.modulator) {
               this.modulator.connect(this.oscillatorNode.frequency);
@@ -200,10 +208,10 @@ olos-oscillator is an oscillator
             e.stopPropagation();
           }
 
-          if (self.freqSliderValue <=0 ) {
+          if (self.freq <=0 ) {
             return;
           }
-          self.freq = self.freqSliderValue;
+          self.freq = self.freq;
 
           self.freqChanged();
           if (self.oscillatorNode) {
@@ -258,9 +266,14 @@ olos-oscillator is an oscillator
               this.modulator.connect(this.oscillatorNode.frequency)
             }
           }
-          for (var i = 0; i < this.frequencyParam.length; i++) {
-            if (this.frequencyParam[i] > 0) {
-              this.freqSliderValue = olos.scaleStep(i); // + this.detune.value/12);
+          this.onInput(this.frequencyParam);
+        },
+
+        // public method
+        onInput: function(data) {
+          for (var i = 0; i < data.length; i++) {
+            if (data[i] > 0) {
+              this.freq = olos.scaleStep(i); // + this.detune.value/12);
               this.setFreq();
             }
           }
@@ -292,7 +305,7 @@ olos-oscillator is an oscillator
 
         // TO DO: animate!
         animate: function() {
-          this.freqSliderValue = this.oscillatorNode.frequency.value;
+          this.freq = this.oscillatorNode.frequency.value;
           this.detuneSliderValue = this.oscillatorNode.detune.value;
         },
 
