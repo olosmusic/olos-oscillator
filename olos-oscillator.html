@@ -57,7 +57,7 @@ enough (above 40Hz) or a rhythm if it is low enough (<20Hz).
         <olos-param id="detuneParam"></olos-param>
         <div center horizontal layout>
           <core-tooltip label="Detune in Cents (100 cents = 1 note)">Detune</core-tooltip>
-          <paper-slider pin="true" id="detuneSlider" min="-1200" max="1200" default="0" step="100" immediateValue="{{detuneSliderValue}}" on-click="{{stopProp}}" on-immediate-value-change="{{setDetune}}" editable style="width:100%"></paper-slider>
+          <paper-slider pin="true" id="detuneSlider" min="-1200" max="1200" default="0" step="100" immediateValue="{{detune}}" on-click="{{stopProp}}" on-immediate-value-change="{{setDetune}}" editable style="width:100%"></paper-slider>
         </div>
 
       </div> <!-- end olos-container-->
@@ -109,6 +109,7 @@ enough (above 40Hz) or a rhythm if it is low enough (<20Hz).
           self.setupFreqSlider();
           self.start();
 
+          self._initParams();
         },
 
         /**
@@ -163,16 +164,21 @@ enough (above 40Hz) or a rhythm if it is low enough (<20Hz).
               self.oscillatorNode.connect(self.output);
             }
 
-            // set audioParams for olos-params              // TO DO: generate these automatically ?
-            self.frequencyParam = self.$.frequencyParam;
-            self.detuneParam = self.$.detuneParam;
-            self.frequencyParam.scope = self;
-            self.frequencyParam.callback = self.freqUpdate;
-            self.detuneParam.scope = self;
-            self.detuneParam.callback = self.detuneUpdate;
-            self.detuneParam.audioParam = self.oscillatorNode.detune;
-            self.frequencyParam.audioParam = self.oscillatorNode.frequency;
           }
+        },
+
+        // set audioParams for olos-params
+        // TO DO: generate these automatically ?
+        _initParams: function() {
+          var self = this;
+          self.frequencyParam = self.$.frequencyParam;
+          self.detuneParam = self.$.detuneParam;
+          self.frequencyParam.scope = self;
+          self.frequencyParam.callback = self.freqUpdate;
+          self.detuneParam.scope = self;
+          self.detuneParam.callback = self.detuneUpdate;
+          self.detuneParam.audioParam = self.oscillatorNode.detune;
+          self.frequencyParam.audioParam = self.oscillatorNode.frequency;
         },
 
         _setType: function(e, detail){
@@ -195,26 +201,30 @@ enough (above 40Hz) or a rhythm if it is low enough (<20Hz).
 
         setFreq: function(e, detail){
           var self = this;
+
+          // only act if it was triggered by an event
           if (e) {
             e.preventDefault();
             e.stopPropagation();
-          }
 
-          if (self.freq <=0 ) {
-            return;
-          }
-          self.freq = self.freq;
+            if (self.freq <=0 ) {
+              return;
+            }
 
-          self.freqChanged();
-          if (self.oscillatorNode) {
-            var now = audioContext.currentTime;
-            if (typeof(self.freq) !== 'undefined' && self.freq > 0) {
+            self.freqChanged();
 
-              try {
-                self.oscillatorNode.frequency.exponentialRampToValueAtTime(self.freq, now + 0.000001);
-              } catch(e) {throw e}
+            if (self.oscillatorNode) {
+              var now = audioContext.currentTime;
+              if (typeof(self.freq) !== 'undefined' && self.freq > 0) {
+
+                try {
+                  self.oscillatorNode.frequency.exponentialRampToValueAtTime(self.freq, now);
+                  // console.log('new value' + self.oscillatorNode.frequency.value);
+                } catch(e) {throw e}
+              }
             }
           }
+
         },
 
         setDetune: function(e, detail){
@@ -222,14 +232,14 @@ enough (above 40Hz) or a rhythm if it is low enough (<20Hz).
           if (e) {
             e.preventDefault();
             e.stopPropagation();
-          }
 
-          self.detune = self.detuneSliderValue;
+            // self.detune = self.detuneSliderValue;
 
-          // this.detuneChanged();
-          if (self.oscillatorNode) {
-            var now = audioContext.currentTime;
-            self.oscillatorNode.detune.linearRampToValueAtTime(self.detune, now + 0.000001);
+            // this.detuneChanged();
+            if (self.oscillatorNode) {
+              var now = audioContext.currentTime;
+              self.oscillatorNode.detune.linearRampToValueAtTime(self.detune, now + 0.000001);
+            }
           }
         },
 
@@ -241,7 +251,7 @@ enough (above 40Hz) or a rhythm if it is low enough (<20Hz).
         // publicly editable
         setupFreqSlider: function() {
           this.freqSlider.min = 0.01;
-          this.freqSlider.max = 500;
+          this.freqSlider.max = 1200;
           this.freqSlider.step = .1;
           // this.freqSlider.value = 220;
         },
@@ -251,41 +261,27 @@ enough (above 40Hz) or a rhythm if it is low enough (<20Hz).
           this.oscillatorNode.frequency.value = 220;
         },
 
-        // public method
-        onInput: function(data) {
-          for (var i = 0; i < data.length; i++) {
-            if (data[i] > 0) {
-              this.freq = olos.scaleStep(i); // + this.detune.value/12);
-              this.setFreq();
+
+        // called by olos-param
+        freqUpdate: function(value, time) {
+          for (var i = 0; i < value.length; i++) {
+            if (value[i] > 0) {
+              var freq = olos.scaleStep(i);
+              this.freq = freq;
+              this.oscillatorNode.frequency.setValueAtTime(this.freq, time); // + this.detune.value/12);
             }
           }
         },
 
-
         // called by olos-param
-        freqUpdate: function(time, value) {
-          console.log(value);
-
-          // if (this.frequencyParam[this.frequencyParam.length-1] instanceof AudioNode) {
-          //   this.modulator = this.frequencyParam[this.frequencyParam.length-1];
-          //   if (this.oscillatorNode) {
-          //     this.modulator.connect(this.oscillatorNode.frequency)
-          //   }
-          // }
-
-          // this.onInput(this.frequencyParam);
-        },
-
-        // called by olos-param
-        detuneUpdate: function(time, value) {
-          console.log(time);
-          // console.log('detune param changed');
-          // if (this.detuneParam[this.detuneParam.length-1] instanceof AudioNode) {
-          //   this.detuneModulator = this.detuneParam[this.detuneParam.length-1];
-          //   if (this.oscillatorNode) {
-          //     this.detuneModulator.connect(this.oscillatorNode.detune)
-          //   }
-          // }
+        detuneUpdate: function(value, time) {
+          for (var i = 0; i < value.length; i++) {
+            if (value[i] > 0) {
+              var detune = i * 100;
+              this.detune = detune;
+              this.oscillatorNode.detune.setValueAtTime(this.detune, time); // + this.detune.value/12);
+            }
+          }
         },
 
         freqChanged: function() {
@@ -298,10 +294,10 @@ enough (above 40Hz) or a rhythm if it is low enough (<20Hz).
 
         },
 
-        // TO DO: animate!
-        animate: function() {
-          this.freq = this.oscillatorNode.frequency.value;
-          this.detuneSliderValue = this.oscillatorNode.detune.value;
+        _draw: function() {
+          // console.log('drawing ');
+          // this.freqSlider.value = this.oscillatorNode.frequency.value;
+          // this.detuneSliderValue = this.oscillatorNode.detune.value;
         },
 
         dispose: function() {
