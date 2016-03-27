@@ -9,6 +9,11 @@
   overflow-y: scroll;
   position: relative;
   height: 100%;
+  padding:10px 25px;
+}
+
+.tooltip {
+	left:30px;
 }
 
 ::shadow #input {
