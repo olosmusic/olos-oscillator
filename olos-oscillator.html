@@ -5,7 +5,12 @@
 <link rel="import" href="../iron-dropdown/iron-dropdown.html">
 <link rel="import" href="../paper-item/paper-item.html">
 <link rel="import" href="../paper-menu/paper-menu.html">
+<link rel="import" href="../paper-menu-button/paper-menu-button.html">
 <link rel="import" href="../paper-tooltip/paper-tooltip.html">
+
+<link rel="import" href="../paper-listbox/paper-listbox.html">
+<link rel="import" href="../paper-radio-group/paper-radio-group.html">
+<link rel="import" href="../paper-toggle-button/paper-toggle-button.html">
 
 <link rel="import" href="../olos-param/olos-param.html">
 
@@ -45,38 +50,67 @@ enough (above 40Hz) or a rhythm if it is low enough (<20Hz).
       @apply(--layout-center);
     }
   </style>
-  <link rel="import" type="text/css" href="olos-oscillator.css">
+  <link rel="stylesheet" type="text/css" href="olos-oscillator.css">
   <template>
 
     <div class="olos-container">
 
-      <div>
-        <paper-dropdown-menu id="oscType">
-            <label> <iron-icon src="./icons/sine_.svg" id="oscimage" style="width:25px; height:25px;"></iron-icon> </label>
-            <iron-dropdown class="dropdown" style="overflow:visible;">
-                <paper-menu selected="0" on-core-select="_setType" class="menu">
-                    <paper-item label="sine"> <iron-icon src="./icons/sine_.svg"></iron-icon>Sine</paper-item>
-                    <paper-item label="triangle"> <iron-icon src="./icons/triangle_.svg"></iron-icon>Triangle</paper-item>
-                    <paper-item label="square"> <iron-icon src="./icons/square_.svg"></iron-icon> Square</paper-item>
-                    <paper-item label="sawtooth"> <iron-icon src="./icons/sawtooth_.svg"></iron-icon> Sawtooth</paper-item>
-                </paper-menu>
-            </iron-dropdown>
-        </paper-dropdown-menu>
+      <div class="top-container">
+          <paper-dropdown-menu id="osc-drop" label="Oscillator Type" icon="menu" class="dropdown-trigger">
+            <paper-menu selected="{{oscType}}" on-iron-select="setType" attr-for-selected="label" class="menu dropdown-content">
+                <paper-item label="sine"> <iron-icon src="./icons/sine_.svg"></iron-icon>Sine</paper-item>
+                <paper-item label="triangle"> <iron-icon src="./icons/triangle_.svg"></iron-icon>Triangle</paper-item>
+                <paper-item label="square"> <iron-icon src="./icons/square_.svg"></iron-icon> Square</paper-item>
+                <paper-item label="sawtooth"> <iron-icon src="./icons/sawtooth_.svg"></iron-icon> Sawtooth</paper-item>
+                <paper-item label="custom"> <iron-icon src=""></iron-icon> Custom</paper-item>
+<!--                 <paper-item label="pwm"> <iron-icon src="./icons/sawtooth_.svg"></iron-icon> Pulse Width Modulation</paper-item>
+                <paper-item label="pulse"> <iron-icon src="./icons/sawtooth_.svg"></iron-icon> Pulse</paper-item> -->
+            </paper-menu>
+          </paper-dropdown-menu>
+          <paper-tooltip position="right" for="osc-drop">Toggle Oscillator Type </paper-tooltip>
+
+
+          <!-- <paper-icon-button on-click="_toggleStart" id="start" src="icons/play.png" hidden=""></paper-icon-button> -->
+          <label class="sync-label">LFO / Sync BPM<paper-toggle-button id="sync-toggle" on-click="_toggleMode" ></paper-toggle-button></label>
+
       </div>
 
-        <paper-icon-button on-click="_toggleStart" id="start" src="icons/play.png" hidden=""></paper-icon-button>
 
 
-        <olos-param id="frequencyParam"></olos-param>
-        <div center="" horizontal="" layout="">
-          <paper-tooltip label="Frequency in Hertz (cycles per second)">Freq</paper-tooltip>
-          <paper-slider pin="true" id="freqSlider" min="1" max="700" default="220" immediatevalue="{{freq}}" on-click="stopProp" on-immediate-value-change="setFreq" editable="" style="width:100%"></paper-slider>
-        </div>
 
-        <olos-param id="detuneParam"></olos-param>
-        <div center="" horizontal="" layout="">
-          <paper-tooltip label="Detune in Cents (100 cents = 1 note)">Detune</paper-tooltip>
-          <paper-slider pin="true" id="detuneSlider" min="-1200" max="1200" default="0" step="100" immediatevalue="{{detune}}" on-click="stopProp" on-immediate-value-change="setDetune" editable="" style="width:100%"></paper-slider>
+        <div class$="{{modeClass}}">
+
+          <div class="no-sync">
+            <olos-param id="frequencyParam"></olos-param>
+            <div id="freq-param" center="" horizontal="" layout="horizonal">
+              <label>Freq</label>
+              <paper-slider pin="true" id="freqSlider" min="1" max="1000" immediate-value="{{freq}}" on-click="stopProp" on-immediate-value-change="setFreq" on-change="setFreq" editable="" style="width:100%" label="freq"></paper-slider>
+            </div>
+            <paper-tooltip for="freq-param" position="top">Frequency in Hertz (cycles per second)</paper-tooltip>
+
+            <olos-param id="detuneParam"></olos-param>
+            <div id="detune-param" center="" horizontal="" layout="horizontal">
+              <label>Detune</label>
+              <paper-slider pin="true" id="detuneSlider" min="-1200" max="1200" default="0" step="100" immediate-value="{{detune}}" on-click="stopProp" on-immediate-value-change="setDetune" on-change="setDetune" editable="" style="width:100%"></paper-slider>
+            </div>
+            <paper-tooltip for="detune-param">Detune in Cents (100 cents = 1 note)</paper-tooltip>
+          </div>
+
+          <div class="sync">
+            <div center="" horizontal=""><label>Frequency: </label>"<span>{{_syncedNum}}</span><span>{{_syncedUnit}}</span>" (<label></label>{{computedFreq}}<span>Hz)</span></div>
+
+            <div id="tone-sync-freq" center="" horizontal="" layout="">
+                <paper-input on-change="changeSyncedFreq" class="single-char" type="number" min="1" max="128" maxlength="3" value="{{_syncedNum}}">
+                </paper-input>
+                <paper-radio-group on-paper-radio-group-changed="changeSyncedFreq" role="listbox" tabindex="0" selected="{{_syncedUnit}}">
+                  <paper-radio-button name="n">n (note) </paper-radio-button>
+                  <paper-radio-button name="t">t (triplet)</paper-radio-button>
+                  <paper-radio-button name="m">m (measure)</paper-radio-button>
+                </paper-radio-group>
+            </div>
+            <paper-tooltip for="tone-sync-freq">Sync to Tempo, using Tone.Time. For example "4n" is a quarter-note, "8t" is an eighth-note triplet, and "1m" is one measure.</paper-tooltip>
+          </div>
+
         </div>
 
       </div> <!-- end olos-container-->
@@ -86,7 +120,63 @@ enough (above 40Hz) or a rhythm if it is low enough (<20Hz).
       Polymer({
         is: 'olos-oscillator',
         properties: {
+
+          _syncedNum: {
+            value: "4",
+            type: String
+          },
+
+          _syncedUnit: {
+            value: "n",
+            type: String
+          },
+
+          computedFreq: {
+            type: Number,
+            value: undefined
+          },
+
+          // sync or not?
+          modeClass: {
+            value: '',
+            type: String
+          },
+
+          syncTempo: {
+            value: undefined,
+            type: String
+          },
+
+          /**
+           *  A Tone.JS Omni-Oscillator, similar
+           *  to the Web Audio API Oscillator Node
+           *  but with additional methods like setPartials()
+           *
+           *  @property toneOsc
+           *  @type {Object}
+           */
+          toneOsc: {
+            value: undefined
+          },
+
           color: { notify: true },
+          detune: {
+            value: 0
+          },
+          freq: { 
+            value: 220,
+            observer: 'freqChanged'
+          },
+          /**
+           *  AudioParam representing the frequency of the OscillatorNode in Hz
+           *  
+           *  @property frequencyParam
+           *  @type olos-param
+           */
+          frequencyParam: {
+            value: null,
+            notify: true
+          },
           /**
            *  AudioParam representing the detune of the OscillatorNode in cents
            *  where 100 cents = 1 step/note.
@@ -98,17 +188,6 @@ enough (above 40Hz) or a rhythm if it is low enough (<20Hz).
             value: null,
             notify: true
           },
-          freq: { observer: 'freqChanged' },
-          /**
-           *  AudioParam representing the frequency of the OscillatorNode in Hz
-           *  
-           *  @property frequencyParam
-           *  @type olos-param
-           */
-          frequencyParam: {
-            value: null,
-            notify: true
-          },
           height: {
             type: Number,
             value: 100,
@@ -117,16 +196,6 @@ enough (above 40Hz) or a rhythm if it is low enough (<20Hz).
           oscType: {
             type: String,
             value: 'sine'
-          },
-          /**
-           *  Web Audio Oscillator node
-           *
-           *  @property oscillatorNode
-           *  @type OscillatorNode
-           */
-          oscillatorNode: {
-            value: null,
-            notify: true
           },
           // output
           output: {
@@ -142,8 +211,8 @@ enough (above 40Hz) or a rhythm if it is low enough (<20Hz).
             type: Array,
             value: function () {
               return [
+                'setPartials',
                 'setupFreqSlider',
-                'setupOscillator',
                 'freqUpdate',
                 'detuneUpdate'
               ];
@@ -151,7 +220,8 @@ enough (above 40Hz) or a rhythm if it is low enough (<20Hz).
           },
           rootfolder: {
             type: String,
-            value: '../olos-oscillator/',
+            // value: '../olos-oscillator/',
+            value: '../',
             notify: true
           },
           src: { notify: true },
@@ -161,101 +231,52 @@ enough (above 40Hz) or a rhythm if it is low enough (<20Hz).
             notify: true
           }
         },
-        /**
-         * Start oscillator
-         */
-        start: function (time) {
-          var self = this;
-          var t = time || self._audioContext.currentTime;
-          this.set('$.start.src', self.rootfolder + 'icons/stop.png');
-          self._initOsc();
-          self.oscillatorNode.start(t);
-        },
-        stop: function (time) {
-          var self = this;
-          var t = time || self._audioContext.currentTime;
-          self.oscillatorNode.stop(t);
-          this.set('$.start.src', self.rootfolder + 'icons/play.png');
-          self.oscillatorNode.disconnect();
-          self.oscillatorNode = null;
-        },
-        _toggleStart: function () {
-          if (!this.playing) {
-            this.start();
-          } else {
-            this.stop();
-          }
-          this.playing = !this.playing;
-        },
-        setOutput: function (obj) {
-          var self = this;
-          self.oscillatorNode.connect(obj);
-          self.output = obj;
-        },
-        _initOsc: function () {
-          var self = this;
-          if (!self.oscillatorNode) {
-            var now = audioContext.currentTime;
-            self.oscillatorNode = self._audioContext.createOscillator();
-            self.oscillatorNode.type = this.oscType;
-            self.oscillatorNode.frequency.setValueAtTime(self.freq, now);
-            if (this.modulator) {
-              this.modulator.connect(this.oscillatorNode.frequency);
-            }
-            if (self.output) {
-              self.oscillatorNode.connect(self.output);
-            }
-          }
-        },
         // set audioParams for olos-params
         // TO DO: generate these automatically ?
         _initParams: function () {
           var self = this;
-          self.frequencyParam = self.$.frequencyParam;
-          self.detuneParam = self.$.detuneParam;
+          self.frequencyParam = this.$.frequencyParam;
+          self.detuneParam = this.$.detuneParam;
           self.frequencyParam.scope = self;
-          self.frequencyParam.callback = self.freqUpdate;
+          self.frequencyParam.callback = function(a, b) {
+            self.freqUpdate(a, b)
+          };
           self.detuneParam.scope = self;
-          self.detuneParam.callback = self.detuneUpdate;
-          self.detuneParam.audioParam = self.oscillatorNode.detune;
-          self.frequencyParam.audioParam = self.oscillatorNode.frequency;
+          self.detuneParam.callback = function(a, b) {
+            self.detuneUpdate(a, b)
+          };
+          self.detuneParam.audioParam = self.toneOsc.detune;
+          self.frequencyParam.audioParam = self.toneOsc.frequency;
+          // self.frequencyParam = self.toneOsc.frequency;
+          // self.detuneParam = self.toneOsc.detune;
         },
-        _setType: function (e, detail) {
-          if (detail.isSelected) {
-            this.oscType = detail.item.innerText.toLowerCase();
-            this.set('$.oscimage.src', this.rootfolder + 'icons/' + this.oscType + '_.svg');
-            if (this.oscillatorNode) {
-              this.set('oscillatorNode.type', this.oscType);
+        setType: function (e) {
+          var sel = e.target.selected;
+          this.oscType = sel;
+
+          if (this.toneOsc) {
+            this.set('toneOsc.type', this.oscType);
+            if (this.oscType == 'custom') {
+              this.setPartials();
             }
           }
         },
-        setType: function (type) {
-          this.oscType = type;
-          this.set('oscillatorNode.type', this.oscType);
-          // TO DO: also update the visual representation
-          this.set('$.oscimage.src', this.rootfolder + '/icons/' + this.oscillatorNode.type + '_.svg');
-        },
         setFreq: function (e, detail) {
           var self = this;
+
           // only act if it was triggered by an event
           if (e) {
             e.preventDefault();
             e.stopPropagation();
-            if (self.freq <= 0) {
+            if (self.freq <= 0 || !self.toneOsc) {
               return;
             }
-            self.freqChanged();
-            if (self.oscillatorNode) {
-              var now = audioContext.currentTime;
-              if (typeof self.freq !== 'undefined' && self.freq > 0) {
-                try {
-                  self.oscillatorNode.frequency.exponentialRampToValueAtTime(self.freq, now);
-                } // console.log('new value' + self.oscillatorNode.frequency.value);
-                catch (e) {
-                  throw e;
-                }
-              }
+
+            if (self.modeClass !== 'synced') {
+              self.toneOsc.frequency.exponentialRampToValueAtTime(self.freq, self.toneOsc.now() + 0.00000001);
             }
+
+            self.freqChanged();
           }
         },
         setDetune: function (e, detail) {
@@ -263,11 +284,14 @@ enough (above 40Hz) or a rhythm if it is low enough (<20Hz).
           if (e) {
             e.preventDefault();
             e.stopPropagation();
-            // self.detune = self.detuneSliderValue;
+            if (!self.toneOsc) {
+              return;
+            }
+            console.log(self.detune);
             // this.detuneChanged();
-            if (self.oscillatorNode) {
-              var now = audioContext.currentTime;
-              self.oscillatorNode.detune.linearRampToValueAtTime(self.detune, now + 0.000001);
+            if (self.toneOsc) {
+              var now = self.toneOsc.now();
+              self.toneOsc.detune.linearRampToValueAtTime(self.detune, now + 0.000001);
             }
           }
         },
@@ -280,12 +304,9 @@ enough (above 40Hz) or a rhythm if it is low enough (<20Hz).
           this.set('freqSlider.min', 0.01);
           this.set('freqSlider.max', 1200);
           this.set('freqSlider.step', 0.1);
+          this.set('freqSlider.value', 220);
         },
-        // this.freqSlider.value = 220;
-        setupOscillator: function () {
-          this.set('oscillatorNode.type', 'sine');
-          this.set('oscillatorNode.frequency.value', 220);
-        },
+
         // called by olos-param
         /**
          *  This function is called when new values are received
@@ -296,16 +317,21 @@ enough (above 40Hz) or a rhythm if it is low enough (<20Hz).
          *  @param  {Number} time  audioContext time
          */
         freqUpdate: function (value, time) {
+          var value = arguments[0];
+          var time = arguments[1];
+
           for (var i = 0; i < value.length; i++) {
             if (value[i] > 0) {
+
               // scale frequency according to the key olos is in
-              this.freq = olos.scaleStep(i);
+              this.set('freqSlider.value', olos.scaleStep(i));
+
               // apply new frequency to this oscillatorNode
-              this.oscillatorNode.frequency.setValueAtTime(this.freq, time);
+              this.toneOsc.frequency.setValueAtTime(this.freq, time);
             }
           }
         },
-        // + this.detune.value/12);
+        // called by olos-param
         /**
          *  This function is called when new values are received
          *  from a connected matrix.
@@ -315,14 +341,28 @@ enough (above 40Hz) or a rhythm if it is low enough (<20Hz).
          *  @param  {Number} time  audioContext time
          */
         detuneUpdate: function (value, time) {
+          var value = arguments[0];
+          var time = arguments[1];
+
           for (var i = 0; i < value.length; i++) {
             if (value[i] > 0) {
               // multiply detune values
-              this.detune = i * 100;
+              // this.detune = i * 100;
+              console.log(i * 100);
+              this.set('detuneSlider.value', i * 100);
+
               // apply detune to this oscillatorNode
-              this.oscillatorNode.detune.setValueAtTime(this.detune, time);
+              this.toneOsc.detune.setValueAtTime(i*100, time);
             }
           }
+        },
+        setPartials: function() {
+          var partials = [1];
+          for (var i = 0; i < 24; i++) {
+              partials.push(Math.random());
+          }
+
+          this.toneOsc.partials = partials;
         },
         // + this.detune.value/12);
         freqChanged: function () {
@@ -338,10 +378,13 @@ enough (above 40Hz) or a rhythm if it is low enough (<20Hz).
         // this.freqSlider.value = this.oscillatorNode.frequency.value;
         // this.detuneSliderValue = this.oscillatorNode.detune.value;
         dispose: function () {
+          this.toneOsc.dispose();
+
           var nodes = [
             'output',
             'oscillatorNode'
           ];
+
           for (var i = 0; i < nodes.length; i++) {
             try {
               var node = self[nodes[i]];
@@ -353,16 +396,79 @@ enough (above 40Hz) or a rhythm if it is low enough (<20Hz).
         },
         ready: function () {
           var self = this;
+          self.initUI();
+
           self._audioContext = audioContext;
           self.playing = false;
-          // self.frequencyParam = audioContext.createGain();
+
           self.output = audioContext.createGain();
-          self.freqSlider = this.$.freqSlider;
-          self.freqSlider.value = 220;
-          self.setupFreqSlider();
-          self.start();
+          self._initOsc();
+
           self._initParams();
+          self.__debug();
+        },
+
+        initUI: function() {
+          this.freqSlider = this.$.freqSlider;
+          this.detuneSlider = this.$.detuneSlider;
+          // this.freqSlider.value = this.freq;
+          this.setupFreqSlider();
+        },
+
+        __debug: function() {
+          window.osc = this;
+        },
+
+        _initOsc: function() {
+          var self = this;
+          this.toneOsc = new Tone.OmniOscillator();
+
+          self.toneOsc.type = this.oscType;
+          self.toneOsc.frequency.value = self.freq;
+          self.toneOsc.connect(self.output);
+          self.toneOsc.start();
+
+          var now = audioContext.currentTime;
+          if (this.modulator) {
+            this.modulator.connect(this.toneOsc.frequency);
+          }
+
+          // listen for bpm-change events from forked tone.js
+          document.addEventListener('bpm-change', function(e) {
+            // if synced, sync osc freq
+            if (self.modeClass === 'synced') {
+              self.changeSyncedFreq();
+            }
+          });
+
+        },
+
+        // sync to tempo of Tone.Transport?
+        _toggleMode: function(e) {
+          var className = this.$$('#sync-toggle').checked ? 'synced' : '';
+          this.modeClass = className;
+
+          if (className.length > 0) {
+            this.changeSyncedFreq();
+            this.toneOsc.syncFrequency();
+          } else {
+            // get slider value
+            this.toneOsc.unsyncFrequency();
+            this.toneOsc.frequency.value = this.freq;
+          }
+        },
+
+        changeSyncedFreq: function() {
+          var self = this;
+          var freqString = this._syncedNum + this._syncedUnit;
+          this.toneOsc.frequency.value = freqString;
+          console.log(this.toneOsc.frequency.value);
+
+          setTimeout(function() {
+            self.computedFreq = self.toneOsc.toFrequency( freqString);
+          }, 1);
         }
+
       });
     }());
   </script>
