@@ -4,16 +4,15 @@
   "license": "MIT",
   "main": "olos-oscillator.html",
   "dependencies": {
-    "polymer": "Polymer/polymer#~0.5.1",
-    "paper-slider": "Polymer/paper-slider#~0.5.1",
-    "paper-icon-button": "Polymer/paper-icon-button#~0.5.1",
-    "paper-dropdown-menu": "Polymer/paper-dropdown-menu",
-    "paper-dropdown": "Polymer/paper-dropdown",
-    "paper-item": "Polymer/paper-item",
-    "core-menu": "Polymer/core-menu",
-    "font-roboto": "Polymer/font-roboto#^0.5.0",
-    "core-tooltip": "Polymer/core-tooltip#~0.5.5",
-    "olos-param": "olosmusic/olos-param#master"
+    "polymer": "Polymer/polymer#~1.1.0",
+    "paper-tooltip": "^1.1.2",
+    "paper-menu-button": "^1.0.4",
+    "paper-listbox": "^1.1.2",
+    "paper-radio-group": "^1.0.9",
+    "paper-radio-button": "^1.1.2",
+    "paper-toggle-button": "^1.1.2",
+    "iron-dropdown": "^1.3.0",
+    "paper-dropdown-menu": "^1.1.3"
   },
   "devDependencies": {
     "web-component-tester": "Polymer/web-component-tester#^1.1.4"

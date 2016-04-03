@@ -5,6 +5,11 @@
   font-size:10px;
 }
 
+:host ::content .input-content.paper-input-container input {
+  text-align:center !important;
+  min-width: 35px;
+}
+
 .olos-container {  
   overflow-y: scroll;
   position: relative;
@@ -12,11 +17,38 @@
   padding:10px 25px;
 }
 
-.tooltip {
-	left:30px;
+.sync-label {
+  padding: 15px;
+  display: inline-block;
 }
 
-::shadow #input {
-  /*font-family: sans-serif;*/
-  font-weight: 700;
+.sync {
+  display:none;
+}
+
+.synced div.sync {
+  display:block;
+}
+
+.synced div.no-sync {
+  display:none;
+}
+
+.top-container {
+  display:inline-block;
+}
+
+.top-container paper-dropdown-menu {
+  width:50%;
+  float:left;
+}
+
+paper-radio-group > * {
+  padding: 5px;
+  margin-top: 20px;
+}
+
+.paper-radio-button-0 #radioLabel.paper-radio-button {
+  display: block;
+  margin-left:0px;
 }
