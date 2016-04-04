@@ -14,8 +14,6 @@
 
 <link rel="import" href="../olos-param/olos-param.html">
 
-<!-- <link rel="import" href="../font-roboto/roboto.html"> -->
-
 <!--
 olos-oscillator is a signal oscillating between -1 and +1, with 0 as no amplitude.
 
@@ -316,12 +314,12 @@ enough (above 40Hz) or a rhythm if it is low enough (<20Hz).
          *  @param  {Array} value array of values from a matrix
          *  @param  {Number} time  audioContext time
          */
-        freqUpdate: function (value, time) {
-          var value = arguments[0];
+        freqUpdate: function (values, time) {
+          var values = arguments[0];
           var time = arguments[1];
 
-          for (var i = 0; i < value.length; i++) {
-            if (value[i] > 0) {
+          for (var i = 0; i < values.length; i++) {
+            if (values[i] > 0) {
 
               // scale frequency according to the key olos is in
               this.set('freqSlider.value', olos.scaleStep(i));
